@@ -82,48 +82,24 @@ func JobMux(next http.Handler) http.Handler {
 		data := AddExprReqIn{}
 		err = json.Unmarshal(body, &data)
 		if err == nil {
-			addJob(data)
+			JobsTotal.Lock.Lock()
+			defer JobsTotal.Lock.Unlock()
+			JobsTotal.Running[data.Id] = Job{data.Expr, time.Now().Format("01/02 - 03:04:05"), ""}
 		}
 
 		next.ServeHTTP(rec, r)
 		if rec.Stat == http.StatusOK {
-			toComp(data)
+			JobsTotal.Lock.Lock()
+			defer JobsTotal.Lock.Unlock()
+			job := JobsTotal.Running[data.Id]
+			delete(JobsTotal.Running, data.Id)
+			JobsTotal.Completed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
 		} else {
-			toFail(data)
+			JobsTotal.Lock.Lock()
+			defer JobsTotal.Lock.Unlock()
+			job := JobsTotal.Running[data.Id]
+			delete(JobsTotal.Running, data.Id)
+			JobsTotal.Failed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
 		}
-	})
-}
-
-func addJob(data Expression) {
-	JobsTotal.Lock.Lock()
-	defer JobsTotal.Lock.Unlock()
-	JobsTotal.Running[data.Id] = Job{data.Expr, time.Now().Format("01/02 - 03:04:05"), ""}
-}
-
-func toComp(data Expression) {
-	JobsTotal.Lock.Lock()
-	defer JobsTotal.Lock.Unlock()
-	job := JobsTotal.Running[data.Id]
-	delete(JobsTotal.Running, data.Id)
-	JobsTotal.Completed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
-}
-
-func toFail(data Expression) {
-	JobsTotal.Lock.Lock()
-	defer JobsTotal.Lock.Unlock()
-	job := JobsTotal.Running[data.Id]
-	delete(JobsTotal.Running, data.Id)
-	JobsTotal.Failed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
-}
-
-func Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, r)
 	})
 }
