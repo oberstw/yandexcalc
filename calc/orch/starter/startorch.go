@@ -1,4 +1,4 @@
-package orch
+package starter
 
 import (
 	"net/http"
@@ -7,13 +7,13 @@ import (
 )
 
 func StartOrchestrator(){
-	handlers.Start()
+	handlers.StartJobs()
 	mux := http.NewServeMux()
 	expr := http.HandlerFunc(handlers.Expr)
 	jobs := http.HandlerFunc(handlers.Job)
 
-	mux.Handle("/expr", expr)
-	mux.HandleFunc("/jobs", handlers.JobMux(jobs))
+	mux.Handle("/expr",  handlers.JobMux(expr))
+	mux.HandleFunc("/jobs", jobs)
 
 	http.ListenAndServe("8000", mux)
 }

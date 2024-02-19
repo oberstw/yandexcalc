@@ -1,10 +1,11 @@
 package main
 
 import (
+	"agent/starter"
 	"agent/workers"
 )
 
 func main() {
 	workers.Set()
-	StartServer(8080)
+	starter.StartAgent()
 }

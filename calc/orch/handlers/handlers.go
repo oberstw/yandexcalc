@@ -1,7 +1,8 @@
-package orch
+package handlers
 
 import (
 	"net/http"
+	"io	"
 	"fmt"
 	"orch/math"
 )
@@ -13,33 +14,27 @@ type JobInfo struct {
 	Completed map[string]Job `json:"completed"`
 }
 
-type Expression struct {
-	Id   string `json:"id"`
-	Expr string `json:"expr"`
-}
-
-type Result struct {
-	Res float64 `json:"res"`
-	Err string  `json:"err"`
-}
-
-
 type Job struct{
 	Expr string `json:"expr"`
 	Start string `json:"start"`
 	End string `json:"end"`
 }
 
-var JobsTotal *JobInfo
+type Expr struct{
+	Expr string `json:"expr"`
+	Id string `json:"id"`
+}
+
+
+var JobsTotal JobInfo
 
 func Expr(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	var e string
 	er := decoder.Decode(&e)
-	e = math.sanitize(e)
+	e = math.spaces(e)
 	if er != nil {
-		ermsg := Result{0, er}
-		msg, _ := json.Marshal(ermsg)
+		msg, _ := json.Marshal(0)
 		w.Write(msg)
 		return
 	}
@@ -47,14 +42,12 @@ func Expr(w http.ResponseWriter, r *http.Request) {
 	ans, err := math.Calculate(res)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		ermsg := Result{0, err}
-		msg, _ := json.Marshal(ermsg)
+		msg, _ := json.Marshal(0)
 		w.Write(msg)
 		return
 	}
 	w.WriteHeader(http.SatusOK)
-	res := Result{ans, ""}
-	msg, _ := json.Marshal(res)
+	msg, _ := json.Marshal(ans)
 	w.Write(msg)
 }
 
@@ -63,8 +56,8 @@ type Status struct {
 	Stat int
 }
 
-func Start() {
-	Jobs = &JobsInfo{sync.Mutex{}, make(map[string]Job), make(map[string]Job), make(map[string]Job)}
+func StartJobs() {
+	JobsTotal = &JobsInfo{sync.Mutex{}, make(map[string]Job), make(map[string]Job), make(map[string]Job)}
 }
 
 func Jobhandle(w http.ResponseWriter, r *http.Request) {
@@ -74,32 +67,33 @@ func Jobhandle(w http.ResponseWriter, r *http.Request) {
 
 func JobMux(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rec := &StatusRecorder{ResponseWriter: w}
-		rec.Stat = 200
+		rec := &Status{ResponseWriter: w}
 		body, err := io.ReadAll(r.Body)
-
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
-		data := AddExprReqIn{}
+		data := Expr{}
 		err = json.Unmarshal(body, &data)
 		if err == nil {
 			JobsTotal.Lock.Lock()
 			defer JobsTotal.Lock.Unlock()
-			JobsTotal.Running[data.Id] = Job{data.Expr, time.Now().Format("01/02 - 03:04:05"), ""}
+			JobsTotal.Running[data.Id] = Job{data.Expr, time.Now().Format("2006-01-02 15:04:05"), ""}
 		}
-
 		next.ServeHTTP(rec, r)
 		if rec.Stat == http.StatusOK {
 			JobsTotal.Lock.Lock()
 			defer JobsTotal.Lock.Unlock()
 			job := JobsTotal.Running[data.Id]
 			delete(JobsTotal.Running, data.Id)
-			JobsTotal.Completed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
+			JobsTotal.Completed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("2006-01-02 15:04:05")}
 		} else {
 			JobsTotal.Lock.Lock()
 			defer JobsTotal.Lock.Unlock()
 			job := JobsTotal.Running[data.Id]
 			delete(JobsTotal.Running, data.Id)
-			JobsTotal.Failed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("01/02 - 03:04:05")}
+			JobsTotal.Failed[data.Id] = Job{job.Expr, job.Start, time.Now().Format("2006-01-02 15:04:05")}
 		}
 	})
+}
+
+func ChangeExprTimeout(w http.ResponseWriter, r *http.Request) {
+	
 }

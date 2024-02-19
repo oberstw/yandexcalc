@@ -1,4 +1,4 @@
-package orch
+package math
 
 import (
 	"net/http"
@@ -15,7 +15,6 @@ type Agentreq struct {
 	A     float64 `json:"a"`
 	B     float64 `json:"b"`
 	Sign    string  `json:"sign"`
-	Timeout int     `json:"timeout"`
 }
 
 type Agentout struct {
@@ -89,7 +88,7 @@ func InfixToPostfix(infix string) string {
     return postfix
 }
 
-func sanitize(line string) string{
+func spaces(line string) string{
 	return strings.ReplaceAll(line, " ", "")
 }
 
@@ -117,7 +116,7 @@ func Calculate(arr []string) float64, error {
 func AgentCalc(a, b float64, sign string) (float64, error) {
     url := "http://127.0.0.1:8080/exp"
 	client := &http.Client{}
-	s := Agentreq{a, b, sign, 1000}
+	s := Agentreq{a, b, sign}
     data, _ := json.Marshal(s)
     ctx, cancel := context.WithTimeout(context.Background(), time.Duration(1000) * time.Millisecond)
 	defer cancel()

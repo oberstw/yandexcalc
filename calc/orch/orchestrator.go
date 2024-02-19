@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	starter.StartServer(8000)
+	starter.StartOrchestrator()
 }
