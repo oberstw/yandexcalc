@@ -2,8 +2,12 @@ package handlers
 
 import (
 	"net/http"
-	"io	"
-	"fmt"
+	"io"
+	"time"
+	"bytes"
+	"sync"
+	"strings"
+	"encoding/json"
 	"orch/math"
 )
 
@@ -20,19 +24,22 @@ type Job struct{
 	End string `json:"end"`
 }
 
-type Expr struct{
+type Expres struct{
 	Expr string `json:"expr"`
 	Id string `json:"id"`
 }
 
+func spaces(line string) string{
+	return strings.ReplaceAll(line, " ", "")
+}
 
 var JobsTotal JobInfo
 
 func Expr(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(req.Body)
+	decoder := json.NewDecoder(r.Body)
 	var e string
 	er := decoder.Decode(&e)
-	e = math.spaces(e)
+	e = spaces(e)
 	if er != nil {
 		msg, _ := json.Marshal(0)
 		w.Write(msg)
@@ -46,7 +53,7 @@ func Expr(w http.ResponseWriter, r *http.Request) {
 		w.Write(msg)
 		return
 	}
-	w.WriteHeader(http.SatusOK)
+	w.WriteHeader(http.StatusOK)
 	msg, _ := json.Marshal(ans)
 	w.Write(msg)
 }
@@ -57,7 +64,7 @@ type Status struct {
 }
 
 func StartJobs() {
-	JobsTotal = &JobsInfo{sync.Mutex{}, make(map[string]Job), make(map[string]Job), make(map[string]Job)}
+	JobsTotal = JobInfo{sync.Mutex{}, make(map[string]Job), make(map[string]Job), make(map[string]Job)}
 }
 
 func Jobhandle(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +77,7 @@ func JobMux(next http.Handler) http.Handler {
 		rec := &Status{ResponseWriter: w}
 		body, err := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
-		data := Expr{}
+		data := Expres{}
 		err = json.Unmarshal(body, &data)
 		if err == nil {
 			JobsTotal.Lock.Lock()

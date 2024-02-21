@@ -2,7 +2,6 @@ package starter
 
 import (
 	"net/http"
-	"fmt"
 	"orch/handlers"
 )
 
@@ -10,7 +9,7 @@ func StartOrchestrator(){
 	handlers.StartJobs()
 	mux := http.NewServeMux()
 	expr := http.HandlerFunc(handlers.Expr)
-	jobs := http.HandlerFunc(handlers.Job)
+	jobs := http.HandlerFunc(handlers.Jobhandle)
 
 	mux.Handle("/expr",  handlers.JobMux(expr))
 	mux.HandleFunc("/jobs", jobs)

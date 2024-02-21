@@ -3,13 +3,16 @@ package math
 import (
 	"net/http"
 	"fmt"
-	"orch/handlers"
     "time"
+    "encoding/json"
     "context"
+    "bytes"
     "strconv"
 )
 
 type Stack []string
+
+type Stackint []float64
 
 type Agentreq struct {
 	A     float64 `json:"a"`
@@ -22,26 +25,55 @@ type Agentout struct {
 	Err string  `json:"err"`
 }
 
-func (st *Stack) IsEmpty() bool {
-    return len(*st) == 0
+func (st Stack) IsEmpty() bool {
+    return len(st) == 0
 }
 
-func (st *Stack) Push(str string) {
-    *st = append(*st, str) 
+func (st Stack) Push(str string) {
+    st = append(st, str) 
 }
 
-func (st *Stack) Pop() bool {
-    var x
-    x, *st = *st[len(*st)-1], *st[:len(*st)-1]
+func (st Stack) Pop() string {
+    var x string
+    x, st = st[len(st)-1], st[:len(st)-1]
     return x
 }
 
-func (st *Stack) Top() string {
+func (st Stack) Top() string {
     if st.IsEmpty() {
         return ""
     } else {
-        index := len(*st) - 1   
-        element := (*st)[index] 
+        index := len(st) - 1   
+        element := (st)[index] 
+        return element
+    }
+}
+
+func (st Stackint) Push(i float64) {
+    st = append(st, i) 
+}
+
+func (st Stackint) IsEmpty() bool {
+    return len(st) == 0
+}
+
+
+func (st Stackint) Pop() float64 {
+    var x float64
+    x, st = st[len(st)-1], st[:len(st)-1]
+    return x
+}
+
+func (st Stackint) Len() float64 {
+    return float64(len(st))
+}
+
+func (st Stackint) Top() float64 {
+    if st.IsEmpty() {
+        return 0
+    } else {
+        index := len(st) - 1   
+        element := (st)[index] 
         return element
     }
 }
@@ -58,7 +90,7 @@ func prec(s string) int {
     }
 }
 
-func InfixToPostfix(infix string) string {
+func InfixToPostfix(infix string) []string {
     var sta Stack
     var postfix []string
     for _, char := range infix {
@@ -88,12 +120,8 @@ func InfixToPostfix(infix string) string {
     return postfix
 }
 
-func spaces(line string) string{
-	return strings.ReplaceAll(line, " ", "")
-}
-
-func Calculate(arr []string) float64, error {
-    var stack Stack
+func Calculate(arr []string) (float64, error) {
+    var stack Stackint
 	for _, i := range arr {
         if num, err := strconv.ParseFloat(i, 64); err == nil {
 			stack.Push(num)
@@ -111,6 +139,7 @@ func Calculate(arr []string) float64, error {
 			stack.Push(topush)
 		}
 	}
+    return stack[0], nil
 }
 
 func AgentCalc(a, b float64, sign string) (float64, error) {
@@ -121,7 +150,7 @@ func AgentCalc(a, b float64, sign string) (float64, error) {
     ctx, cancel := context.WithTimeout(context.Background(), time.Duration(1000) * time.Millisecond)
 	defer cancel()
 
-    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(jsdata))
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(data))
     if err != nil{
 		return 0, fmt.Errorf("bad agent request")
 	}
@@ -134,11 +163,11 @@ func AgentCalc(a, b float64, sign string) (float64, error) {
 		}
     }
     defer resp.Body.Close()
-    var data Agentout
+    var dat Agentout
     decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&data)
+	err = decoder.Decode(&dat)
 	if resp.StatusCode != http.StatusOK{
-		return 0, fmt.Errorf(data.Err)
+		return 0, fmt.Errorf(dat.Err)
 	}
-    return data.Result, nil
+    return dat.Result, nil
 }
