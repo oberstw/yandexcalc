@@ -1,11 +1,11 @@
 package workers
 
 import (
-	"context"
-	"os"
-	"strconv"
-	"sync"
-	"time"
+	// "context"
+	// "os"
+	// "strconv"
+	// "sync"
+	// "time"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -16,6 +16,6 @@ var Limit semaphore.Weighted
 
 
 func Set() {
-	Limit = *semaphore.NewWeighted(Workers)
+	Limit = *semaphore.NewWeighted(int64(Workers))
 	Information = make(map[string]string)
 }

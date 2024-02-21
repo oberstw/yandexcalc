@@ -1,8 +1,7 @@
-package main
+package starter
 
 import (
 	"net/http"
-	"fmt"
 	"agent/handlers"
 )
 

@@ -3,47 +3,57 @@ package handlers
 import (
 	"net/http"
 	"fmt"
-	"orch/math"
 	"agent/workers"
 	"time"
-	"sync"
+	"context"
+	"encoding/json"
 )
 
+type Agentreq struct {
+	A     float64 `json:"a"`
+	B     float64 `json:"b"`
+	Sign    string  `json:"sign"`
+}
+
+func RelWorker(wdata string) {
+	workers.Limit.Release(1)
+	delete(workers.Information, wdata)
+}
+
 func Exp(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-	var e math.Agentreq
+	decoder := json.NewDecoder(r.Body)
+	var e Agentreq
 	err := decoder.Decode(&e)
 	if err != nil {
 		panic(err)
 	}
-	workerdata := fmt.Sprintf("%f %f %s", data.A, data.B, data.Sign)
+	workerdata := fmt.Sprintf("%f %f %s", e.A, e.B, e.Sign)
 	workers.Limit.Acquire(context.Background(), 1)
 	start := time.Now().Format("2006-01-02 15:04:05")
 	workers.Information[workerdata] = start
-	defer func {
-		workers.Limit.Release(1)
-		delete(workers.Information, workerdata)
-	}
+	defer RelWorker(workerdata)
+	var res float64
+	var er error
 	if e.Sign == "+" {
-		res := e.A + e.B
+		res = e.A + e.B
 	} else if e.Sign == "-" {
-		res := e.A - e.B
+		res = e.A - e.B
 	} else if e.Sign == "*" {
-		res := e.A * e.B
+		res = e.A * e.B
 	} else if e.Sign == "/" {
 		if e.B == 0 {
-			err := fmt.Errorf("div by zero")
+			er = fmt.Errorf("div by zero")
 		} else {
-			res := e.A /e.B
+			res = e.A /e.B
 		}
 	} else {
-		err := fmt.Errorf("wrong sign")
+		er = fmt.Errorf("wrong sign")
 	}
 	time.Sleep(time.Duration(1000) * time.Millisecond)
-	if err != nil {
+	if er != nil {
 		w.WriteHeader(http.StatusForbidden)
-		panic(err)
+		panic(er)
 	}
 	k, _ := json.Marshal(res)
-	w.Write(res)
+	w.Write(k)
 }
