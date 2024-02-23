@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main</title>
+</head>
+<body>
+    <a href="http://127.0.0.1:8040/jobs">Jobs</a>
+    <a href="http://127.0.0.1:8040/timeouts">Timeouts </a>
+
+    <h2>Enter Expression</h2>
+    <form id="expressionForm">
+        <label for="expr">Enter the expression:</label><br>
+        <input type="text" id="expr" name="expr"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById("expressionForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            var expression = document.getElementById("expr").value;
+            var currentTime = new Date().getTime();
+            var randomid = Math.floor((1 + Math.random()) * 0x10000).toString(36);
+
+            var result = document.getElementById("result");
+            result.textContent = "Выражение еще не посчитано, ожидайте";
+
+            var data = {
+                expr: expression,
+                id: randomid
+            };
+
+            fetch("http://127.0.0.1:8000/expr", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response from server:', data);
+                if (data.hasOwnProperty("result")) {
+                    result.textContent = expression + " = " + data.result;
+                } else if (data.hasOwnProperty("err")) {
+                    result.textContent = "При счете произошла ошибка: " + data.err;
+                } else {
+                    result.textContent = "Сервер не отвечает";
+                }
+            })
+            .catch(error => {
+                console.error('Error during fetch operation:', error);
+            });
+        });
+    </script>
+</body>

@@ -10,12 +10,16 @@ go build
 cd ../orch
 go get 
 go build
+cd ../frontend
+go get
+go build
 ```
 Затем, чтобы запустить, введите следующий код:
 ```sh
 cd yandexcalc/calc/
 ./agent/agent
 ./orch/orchestrator
+./frontend/frontend
 ```
 В случае возникших вопросов по установке и/или использованию, создайте Issue к этому проекту. Также можно написать в телеграм @owwwwm
 

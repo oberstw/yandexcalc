@@ -29,11 +29,25 @@ type Expres struct{
 	Id string `json:"id"`
 }
 
+type TimeStruct struct{
+	Oper string `json:"oper"`
+	Timeout int `json:"timeout"`
+}
+
 func spaces(line string) string{
 	return strings.ReplaceAll(line, " ", "")
 }
 
 var JobsTotal JobInfo
+var Time = make(map[string]int)
+var mu   sync.Mutex 
+
+func SetTimeouts() {
+	Time["+"] = time.Duration(3000)
+	Time["-"] = time.Duration(3000)
+	Time["/"] = time.Duration(3000)
+	Time["*"] = time.Duration(3000)
+}
 
 func Expr(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -102,5 +116,26 @@ func JobMux(next http.Handler) http.Handler {
 }
 
 func ChangeExprTimeout(w http.ResponseWriter, r *http.Request) {
-	
+	decoder := json.NewDecoder(r.Body)
+	var e TimeStruct
+	decoder.Decode(&e)
+	mu.Lock()
+	switch e.Oper {
+    case "+":
+        Time[e.Oper] = time.Duration(e.Timeout)
+    case "-":
+        Time[e.Oper] = time.Duration(e.Timeout)
+    case "/":
+        Time[e.Oper] = time.Duration(e.Timeout)
+    case "*":
+        Time[e.Oper] = time.Duration(e.Timeout)
+    default:
+        http.Error(w, "Unsupported operation", http.StatusBadRequest)
+        return
+    }
+}
+
+func GibTimeouts(w http.ResponseWriter, r *http.Request) {
+	msg, _ := json.Marshal(Time)
+	w.Write(msg)
 }

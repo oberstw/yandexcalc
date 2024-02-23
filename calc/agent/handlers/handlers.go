@@ -27,7 +27,7 @@ func Exp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	workerdata := fmt.Sprintf("%f %f %s", e.A, e.B, e.Sign)
+	workerdata := fmt.Sprintf("%f %s %f", e.A, e.Sign, e.B)
 	workers.Limit.Acquire(context.Background(), 1)
 	start := time.Now().Format("2006-01-02 15:04:05")
 	workers.Information[workerdata] = start
@@ -56,4 +56,9 @@ func Exp(w http.ResponseWriter, r *http.Request) {
 	}
 	k, _ := json.Marshal(res)
 	w.Write(k)
+}
+
+func Workersh(w http.ResponseWriter, r *http.Request) {
+	data, _ := json.Marshal(workers.Information)
+	w.Write(data)
 }
