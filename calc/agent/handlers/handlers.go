@@ -13,6 +13,7 @@ type Agentreq struct {
 	A     float64 `json:"a"`
 	B     float64 `json:"b"`
 	Sign    string  `json:"sign"`
+	Timeout int `json:"timeout"`
 }
 
 func RelWorker(wdata string) {
@@ -49,7 +50,7 @@ func Exp(w http.ResponseWriter, r *http.Request) {
 	} else {
 		er = fmt.Errorf("wrong sign")
 	}
-	time.Sleep(time.Duration(1000) * time.Millisecond)
+	time.Sleep(time.Duration(e.Timeout) * time.Millisecond)
 	if er != nil {
 		w.WriteHeader(http.StatusForbidden)
 		panic(er)

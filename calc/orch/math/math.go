@@ -14,10 +14,13 @@ type Stack []string
 
 type Stackint []float64
 
+var Time = make(map[string]int)
+
 type Agentreq struct {
 	A     float64 `json:"a"`
 	B     float64 `json:"b"`
 	Sign    string  `json:"sign"`
+    Timeout int `json:"timeout"`
 }
 
 type Agentout struct {
@@ -145,7 +148,7 @@ func Calculate(arr []string) (float64, error) {
 func AgentCalc(a, b float64, sign string) (float64, error) {
     url := "http://127.0.0.1:8080/exp"
 	client := &http.Client{}
-	s := Agentreq{a, b, sign}
+	s := Agentreq{a, b, sign, Time[sign]}
     data, _ := json.Marshal(s)
     ctx, cancel := context.WithTimeout(context.Background(), time.Duration(1000) * time.Millisecond)
 	defer cancel()

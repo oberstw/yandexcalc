@@ -39,14 +39,13 @@ func spaces(line string) string{
 }
 
 var JobsTotal JobInfo
-var Time = make(map[string]int)
 var mu   sync.Mutex 
 
 func SetTimeouts() {
-	Time["+"] = time.Duration(3000)
-	Time["-"] = time.Duration(3000)
-	Time["/"] = time.Duration(3000)
-	Time["*"] = time.Duration(3000)
+	math.Time["+"] = 3000
+	math.Time["-"] = 3000
+	math.Time["/"] = 3000
+	math.Time["*"] = 3000
 }
 
 func Expr(w http.ResponseWriter, r *http.Request) {
@@ -122,13 +121,13 @@ func ChangeExprTimeout(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	switch e.Oper {
     case "+":
-        Time[e.Oper] = time.Duration(e.Timeout)
+        math.Time[e.Oper] = e.Timeout
     case "-":
-        Time[e.Oper] = time.Duration(e.Timeout)
+        math.Time[e.Oper] = e.Timeout
     case "/":
-        Time[e.Oper] = time.Duration(e.Timeout)
+        math.Time[e.Oper] = e.Timeout
     case "*":
-        Time[e.Oper] = time.Duration(e.Timeout)
+        math.Time[e.Oper] = e.Timeout
     default:
         http.Error(w, "Unsupported operation", http.StatusBadRequest)
         return
@@ -136,6 +135,6 @@ func ChangeExprTimeout(w http.ResponseWriter, r *http.Request) {
 }
 
 func GibTimeouts(w http.ResponseWriter, r *http.Request) {
-	msg, _ := json.Marshal(Time)
+	msg, _ := json.Marshal(math.Time)
 	w.Write(msg)
 }
