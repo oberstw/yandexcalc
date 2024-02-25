@@ -6,13 +6,42 @@
     <title></title>
 </head>
 <body>
-    <h1> Job Status</h1>
-    <table id="dataTable">
+    <h1> Running jobs</h1>
+    <table id="running">
         <thead>
             <tr>
-                <th>Running jobs:</th>
-                <th>Completed jobs:</th>
-                <th>Failed jobs:</th>
+                <th>Job id:</th>
+                <th>Expression:</th>
+                <th>Start time:</th>
+                <th>Finish time:</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table body will be populated dynamically using JavaScript -->
+        </tbody>
+    </table>
+    <h1> Completed jobs</h2>
+    <table id="completed">
+        <thead>
+            <tr>
+                <th>Job id:</th>
+                <th>Expression:</th>
+                <th>Start time:</th>
+                <th>Finish time:</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table body will be populated dynamically using JavaScript -->
+        </tbody>
+    </table>
+    <h1> Failed jobs</h2>
+    <table id="failed">
+        <thead>
+            <tr>
+                <th>Job id:</th>
+                <th>Expression:</th>
+                <th>Start time:</th>
+                <th>Finish time:</th>
             </tr>
         </thead>
         <tbody>
@@ -22,8 +51,8 @@
 
     <button id="updateButton">Update Table</button>
 
-    <div id="workerStatus">
-        <h2> Worker Status</h2>
+    <table id="workerStatus">
+        <h1> Worker Status</h1>
         <thead>
             <tr>
                 <th>Expression:</th>
@@ -33,7 +62,7 @@
         <tbody>
             <!-- Table body will be populated dynamically using JavaScript -->
         </tbody>
-    </div>
+    </table>
 
     <button onclick="getWorkers()">Update Workers</button>
 
@@ -46,63 +75,64 @@
             fetch('http://127.0.0.1:8000/jobs')
             .then(response => response.json())
             .then(data => {
-                populateTable(data)
+                const running = document.querySelector('#running tbody');
+                const completed = document.querySelector('#completed tbody');
+                const failed = document.querySelector('#failed tbody');
+
+                running.innerHTML = '';
+                completed.innerHTML = '';
+                failed.innerHTML = '';
+                for (const id in data.running) {
+                    const job = data.running[id];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${id}</td>
+                        <td>${job.expr}</td>
+                        <td>${job.start}</td>
+                        <td>${job.end}</td>
+                    `;
+                    running.appendChild(row);
+                }
+                for (const id in data.completed) {
+                    const job = data.completed[id];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${id}</td>
+                        <td>${job.expr}</td>
+                        <td>${job.start}</td>
+                        <td>${job.end}</td>
+                    `;
+                    completed.appendChild(row);
+                }
+                for (const id in data.failed) {
+                    const job = data.failed[id];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${id}</td>
+                        <td>${job.expr}</td>
+                        <td>${job.start}</td>
+                        <td>${job.end}</td>
+                    `;
+                    failed.appendChild(row);
+                }
             })
             .catch(error => console.error('Error:', error));
         }
 
-        function populateTable(data) {
-            const tableBody = document.querySelector('#dataTable tbody');
-
-            tableBody.innerHTML = '';
-
-            for (const id in data.running) {
-                const job = data.running[id];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${id}</td>
-                    <td>${job.expr}</td>
-                    <td>${job.start}</td>
-                    <td>${job.end}</td>
-                `;
-                tableBody.appendChild(row);
-            }
-            for (const id in data.running) {
-                const job = data.completed[id];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${id}</td>
-                    <td>${job.expr}</td>
-                    <td>${job.start}</td>
-                    <td>${job.end}</td>
-                `;
-                tableBody.appendChild(row);
-            }
-            for (const id in data.running) {
-                const job = data.failed[id];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${id}</td>
-                    <td>${job.expr}</td>
-                    <td>${job.start}</td>
-                    <td>${job.end}</td>
-                `;
-                tableBody.appendChild(row);
-            }
-        }
-
         function getWorkers() {
-            fetch('http://127.0.0.1:8001/workers')
+            fetch('http://127.0.0.1:8080/workers')
             .then(response => response.json())
             .then(data => {
+                console.log(data)
                 const workerStatus = document.getElementById('workerStatus');
-                workerStatus.innerHTML = '<h2>Current Workers:</h2>';
-                const tableBody = document.querySelector('#workerStatus tbody');
+                const tBody = document.querySelector('#workerStatus tbody');
 
-                tableBody.innerHTML = '';
+                tBody.innerHTML = '';
 
                 for (const e in data) {
+                    console.log(e)
                     const time = data[e];
+                    console.log(time)
                     const row = document.createElement('tr');
 
                     row.innerHTML = `
@@ -110,15 +140,17 @@
                     <td>${time}</td>
                     `;
 
-                    tableBody.appendChild(row);
+                    tBody.appendChild(row);
                 }
             })
             .catch(error => console.error('Error:', error));
         }
 
         document.getElementById('updateButton').addEventListener('click', function() {
-            populateTable();
+            getJobs();
         });
+
+        window.onload = getJobs();
 
     </script>
 </body>

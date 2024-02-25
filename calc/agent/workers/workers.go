@@ -1,11 +1,6 @@
 package workers
 
 import (
-	// "context"
-	// "os"
-	// "strconv"
-	// "sync"
-	// "time"
 	"golang.org/x/sync/semaphore"
 )
 

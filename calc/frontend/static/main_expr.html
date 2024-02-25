@@ -27,7 +27,6 @@
             var randomid = Math.floor((1 + Math.random()) * 0x10000).toString(36);
 
             var result = document.getElementById("result");
-            result.textContent = "Выражение еще не посчитано, ожидайте";
 
             var data = {
                 expr: expression,
@@ -49,13 +48,7 @@
             })
             .then(data => {
                 console.log('Response from server:', data);
-                if (data.hasOwnProperty("result")) {
-                    result.textContent = expression + " = " + data.result;
-                } else if (data.hasOwnProperty("err")) {
-                    result.textContent = "При счете произошла ошибка: " + data.err;
-                } else {
-                    result.textContent = "Сервер не отвечает";
-                }
+                result.textContent = expression + " = " + data;
             })
             .catch(error => {
                 console.error('Error during fetch operation:', error);
